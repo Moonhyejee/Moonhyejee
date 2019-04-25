@@ -1,104 +1,44 @@
-import tensorflow as tf
-import numpy as np
-
-tf.enable_eager_execution()
-
-x_data = [1, 2, 3, 4, 5]
-y_data = [1, 2, 3, 4, 5]
-
-import matplotlib.pyplot as plt
-plt.plot(x_data, y_data, 'o')
-plt.ylim(0, 8)
-
-v =[1., 2., 3., 4.]
-tf.reduce_mean(v) # 2.5
-
-tf.square(3) # 9
-
-x_data = [1, 2, 3, 4, 5]
-y_data = [1, 2, 3, 4, 5]
-
-W = tf.Variable(2.0)
-b = tf.Variable(0.5)
-
-hypothesis = W * x_data + b
-
-W.numpy(), b.numpy()
-
-hypothesis.numpy()
-
-plt.plot(x_data, hypothesis.numpy(), 'r-')
-plt.plot(x_data, y_data, 'o')
-plt.ylim(0, 8)
-plt.show()
-
-cost = tf.reduce_mean(tf.square(hypothesis - y_data))
-
-with tf.GradientTape() as tape:
-    hypothesis = W * x_data + b
-    cost = tf.reduce_mean(tf.square(hypothesis - y_data))
-
-W_grad, b_grad = tape.gradient(cost, [W, b])
-W_grad.numpy(), b_grad.numpy()
-
-learning_rate = 0.01
-
-W.assign_sub(learning_rate * W_grad)
-b.assign_sub(learning_rate * b_grad)
-
-W.numpy(), b.numpy()
-
-plt.plot(x_data, hypothesis.numpy(), 'r-')
-plt.plot(x_data, y_data, 'o')
-plt.ylim(0, 8)
-
-W = tf.Variable(2.9)
-b = tf.Variable(0.5)
-
-for i in range(100):
-    with tf.GradientTape() as tape:
-        hypothesis = W * x_data + b
-        cost = tf.reduce_mean(tf.square(hypothesis - y_data))
-    W_grad, b_grad = tape.gradient(cost, [W, b])
-    W.assign_sub(learning_rate * W_grad)
-    b.assign_sub(learning_rate * b_grad)
-    if i % 10 == 0:
-      print("{:5}|{:10.4f}|{:10.4f}|{:10.6f}".format(i, W.numpy(), b.numpy(), cost))
-
-plt.plot(x_data, y_data, 'o')
-plt.plot(x_data, hypothesis.numpy(), 'r-')
-plt.ylim(0, 8)
-
-print(W * 5 + b)
-print(W * 2.5 + b)
-
-import tensorflow as tf
-import numpy as np
-tf.enable_eager_execution()
+import tensorflow as tf    #tenseorflow를 tf로 호출
+import numpy as np         #numpy를 np로 호출
+tf.enable_eager_execution()   #tensorflow를 명령형 프로그래밍 환경으로 바꿔줌(즉시 실행)
 
 # Data
-x_data = [1, 2, 3, 4, 5]
-y_data = [1, 2, 3, 4, 5]
+x_data = [1, 2, 3, 4, 5]    #X값 입력 (X_data는 input)
+y_data = [1, 2, 3, 4, 5]    #Y값 입력 (Y_data는 output) 즉, 입력과 출력이 같은 모델을 만드려고 함
 
 # W, b initialize
-W = tf.Variable(2.9)
-b = tf.Variable(0.5)
+W = tf.Variable(2.9)      #W값을 임의의 값 2.9로 지정
+b = tf.Variable(0.5)      #b값을 임의의 값 0.5로 지정
+
+learning_rate = 0.01    #아주 작은 값(0.01)으로 정해줌(learning_rate가 작을수록 조금씩 변화가 일어남)
 
 # W, b update
-for i in range(100):
+for i in range(100):    #W와 b를 여러번 수행하기 위해서 for문 사용 (100번 수행)
     # Gradient descent
-    with tf.GradientTape() as tape:
-        hypothesis = W * x_data + b
-        cost = tf.reduce_mean(tf.square(hypothesis - y_data))
-    W_grad, b_grad = tape.gradient(cost, [W, b])
-    W.assign_sub(learning_rate * W_grad)
-    b.assign_sub(learning_rate * b_grad)
-    if i % 10 == 0:
-      print("{:5}|{:10.4f}|{:10.4f}|{:10.6f}".format(i, W.numpy(), b.numpy(), cost))
+    with tf.GradientTape() as tape:    #gradient descent 알고리즘을 GrandientTape을 가지고 구현. 변수들에 대한 정보를 tape로 입력
+        hypothesis = W * x_data + b    #가설함수 hyporthesis를 코드로 입력, 변수: W,b
+        cost = tf.reduce_mean(tf.square(hypothesis - y_data))    #경사하강법(gradient descent)은 경사를 하강하면서 cost가 최소화되는 w,b를 찾는것
+    W_grad, b_grad = tape.gradient(cost, [W, b])   #tape에 gradient 메소드를 호출하여 경사도(미분값) 구하기 W_grad는 W의 기울기, b_grad는 b의 기울기 
+    W.assign_sub(learning_rate * W_grad)    #assign_sub를 호출하여 W 업데이트 (learning_rate는 W값을 얼만큼 반영할 것인지 결정함)
+    b.assign_sub(learning_rate * b_grad)    #assign_sub를 호출하여 b 업데이트 (learning_rate는 W값을 얼만큼 반영할 것인지 결정함)
+    if i % 10 == 0:       #중간중간 확인하기 위해 사용
+      print("{:5}|{:10.4f}|{:10.4f}|{:10.6f}".format(i, W.numpy(), b.numpy(), cost))    #i값이 10의 배수가 될때마다 출력
 
-print()
+print()    
 
-# predict
-print(W * 5 + b)
-print(W * 2.5 + b)
-
+#결과
+#   i        W          b       cost
+    0|    2.4520|    0.3760| 45.660004
+   10|    1.1036|    0.0034|  0.206336
+   20|    1.0128|   -0.0209|  0.001026
+   30|    1.0065|   -0.0218|  0.000093
+   40|    1.0059|   -0.0212|  0.000083
+   50|    1.0057|   -0.0205|  0.000077
+   60|    1.0055|   -0.0198|  0.000072
+   70|    1.0053|   -0.0192|  0.000067
+   80|    1.0051|   -0.0185|  0.000063
+   90|    1.0050|   -0.0179|  0.000059
+   
+#W값은 주어진 초기값 2.9부터 시작해서 1.0으로 수렴
+#b값은 주어진 초기값 0.5부터 시작해서 대략 0으로 수렴
+#cost는 작으면 작을수록 좋음. 100번 이상 수행했을 때 거의 0으로 줄어듦(오차가 적어졌다.)
