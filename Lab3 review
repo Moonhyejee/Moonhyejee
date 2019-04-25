@@ -1,86 +1,94 @@
-import tensorflow as tf
-import numpy as np
+#Cost function in pure Python (cost함수 파이썬으로 구현)
 
-tf.enable_eager_execution()
-tf.__version__
+import numpy as np    #numpy를 np로 호출
 
-import numpy as np
+X = np.array([1, 2, 3])     #X값 입력 (X_data는 input)
+Y = np.array([1, 2, 3])     #Y값 입력 (Y_data는 output) 즉, 입력과 출력이 같은 모델을 만드려고 함
 
-X = np.array([1, 2, 3])
-Y = np.array([1, 2, 3])
+def cost_func(W, X, Y):    #cost함수 정의 (cost함수를 코드로 옮김)
+    c = 0       #c의 초기값 = 0 으로 지정
+    for i in range(len(X)):     #데이터의 갯수만큼 반복
+        c += (W * X[i] - Y[i]) ** 2    #cost함수 hypothesis(예측값) - 실제값인 오차를 제곱한 값을 c에 누적 덧셈을 함
+    return c / len(X)    c를 데이터의 갯수만큼 나눔 즉, 평균
 
-def cost_func(W, X, Y):
-    c = 0
-    for i in range(len(X)):
-        c += (W * X[i] - Y[i]) ** 2
-    return c / len(X)
-
-for feed_W in np.linspace(-3, 5, num=15):
-    curr_cost = cost_func(feed_W, X, Y)
-    print("{:6.3f} | {:10.5f}".format(feed_W, curr_cost))
+for feed_W in np.linspace(-3, 5, num=15):     #-3에서 5 사이를 15개의 구간으로 나누어서 feed_W값을 가짐
+    curr_cost = cost_func(feed_W, X, Y)     #feed_W값에 따라서 cost값이 얼마만큼 바뀌는지 확인
+    print("{:6.3f} | {:10.5f}".format(feed_W, curr_cost))  #출력
     
-X = np.array([1, 2, 3])
-Y = np.array([1, 2, 3])
-
-def cost_func(W, X, Y):
-  hypothesis = X * W
-  return tf.reduce_mean(tf.square(hypothesis - Y))
-
-W_values = np.linspace(-3, 5, num=15)
-cost_values = []
-
-for feed_W in W_values:
-    curr_cost = cost_func(feed_W, X, Y)
-    cost_values.append(curr_cost)
-    print("{:6.3f} | {:10.5f}".format(feed_W, curr_cost))
     
-import matplotlib.pyplot as plt
-plt.rcParams["figure.figsize"] = (8,6)
+#Cost function in Tensorflow  (cost함수 tensorflow로 구현)
 
-import matplotlib.pyplot as plt
+X = np.array([1, 2, 3])    #X값 입력 (X_data는 input)
+Y = np.array([1, 2, 3])    #Y값 입력 (Y_data는 output) 즉, 입력과 출력이 같은 모델을 만드려고 함
 
-plt.plot(W_values, cost_values, "b")
-plt.ylabel('Cost(W)')
-plt.xlabel('W')
-plt.show()
+def cost_func(W, X, Y):     #cost함수 정의 (cost함수를 코드로 옮김)  X= 예측값 Y = 실제값
+  hypothesis = X * W        #hypothesis 값 = X 곱하기 W  
+  return tf.reduce_mean(tf.square(hypothesis - Y))   hypothesis(예측값)에서 실제값을 뺀 뒤 제곱하고 평균을 냄 #tf.square이 제곱, tf.reduce_mean이 평균
+W_values = np.linspace(-3, 5, num=15)    #-3에서 5 사이를 15개의 구간으로 나누어서 feed_W값을 가짐
+cost_values = []    #그 값을 리스트로 받음
 
-tf.set_random_seed(0)  # for reproducibility
-
-x_data = [1., 2., 3., 4.]
-y_data = [1., 3., 5., 7.]
-
-W = tf.Variable(tf.random_normal([1], -100., 100.))
-
-for step in range(300):
-    hypothesis = W * X
-    cost = tf.reduce_mean(tf.square(hypothesis - Y))
-
-    alpha = 0.01
-    gradient = tf.reduce_mean(tf.multiply(tf.multiply(W, X) - Y, X))
-    descent = W - tf.multiply(alpha, gradient)
-    W.assign(descent)
+for feed_W in W_values:      #받은 리스트 값을 하나하나 뽑음
+    curr_cost = cost_func(feed_W, X, Y)     #feed_W값에 따라서 cost값이 얼마만큼 바뀌는지 curr_cost로 확인
+    cost_values.append(curr_cost)     #curr_cost값 기록
+    print("{:6.3f} | {:10.5f}".format(feed_W, curr_cost))    #출력
     
-    if step % 10 == 0:
+    
+#Gradient descent(기울기)
+
+tf.set_random_seed(0)  # for reproducibility   #초기화 (다음에 이 코드를 다시 수행할 때도 동일하게 재현이 될 수 있도록 함)
+
+x_data = [1., 2., 3., 4.]    #X값 입력 (X_data는 input)
+y_data = [1., 3., 5., 7.]    #Y값 입력 (Y_data는 output) 데이터 준비
+
+W = tf.Variable(tf.random_normal([1], -100., 100.))   #정규분포를 따르는 랜덤넘버를 한개짜리(모양)([1})으로 변수를 만들어서 W에 할당해서 정의
+
+for step in range(300):   #300번 반복
+    hypothesis = W * X    #hypothesis 값 = X 곱하기 W  
+    cost = tf.reduce_mean(tf.square(hypothesis - Y))    #hypothesis(예측값)에서 실제값을 뺀 뒤 제곱하고 평균을 냄 #tf.square이 제곱, tf.reduce_mean이 평균 
+                                                        #경사하강법(gradient descent)은 경사를 하강하면서 cost가 최소화되는 w,b를 찾는것
+    alpha = 0.01      #alpha값 0.01로 지정
+    gradient = tf.reduce_mean(tf.multiply(tf.multiply(W, X) - Y, X))   #hypothesis(W곱하기X)에서 실제값을 뺀 뒤 x를 곱하고 평균을 냄 #tf.multiply가 곱하기, tf.reduce_mean이 평균, 기울기
+    descent = W - tf.multiply(alpha, gradient)   #새로운 W값(descent) = gradient(기울기)값에 alpha값을 곱하고 이것을 W에서 빼줌
+    W.assign(descent)     #새로운 W값을 할당함으로써 업데이트
+    
+    if step % 10 == 0:    #10번에 1번씩 W값과 cost값을 출력
         print('{:5} | {:10.4f} | {:10.6f}'.format(
             step, cost.numpy(), W.numpy()[0]))
-            
-print(5.0 * W)
-print(2.5 * W)
 
-x_data = [1., 2., 3., 4.]
-y_data = [1., 3., 5., 7.]
 
-W = tf.Variable([5.0])
-
-for step in range(300):
-    hypothesis = W * X
-    cost = tf.reduce_mean(tf.square(hypothesis - Y))
-
-    alpha = 0.01
-    gradient = tf.reduce_mean(tf.multiply(tf.multiply(W, X) - Y, X))
-    descent = W - tf.multiply(alpha, gradient)
-    W.assign(descent)
-    
-    if step % 10 == 0:
-        print('{:5} | {:10.4f} | {:10.6f}'.format(
-            step, cost.numpy(), W.numpy()[0]))
+#결과 
+    0 | 11716.3086 |  48.767971    
+   10 |  4504.9126 |  30.619968
+   20 |  1732.1364 |  19.366755
+   30 |   666.0052 |  12.388859
+   40 |   256.0785 |   8.062004
+   50 |    98.4620 |   5.379007
+   60 |    37.8586 |   3.715335
+   70 |    14.5566 |   2.683725
+   80 |     5.5970 |   2.044044
+   90 |     2.1520 |   1.647391
+  100 |     0.8275 |   1.401434
+  110 |     0.3182 |   1.248922
+  120 |     0.1223 |   1.154351
+  130 |     0.0470 |   1.095710
+  140 |     0.0181 |   1.059348
+  150 |     0.0070 |   1.036801
+  160 |     0.0027 |   1.022819
+  170 |     0.0010 |   1.014150
+  180 |     0.0004 |   1.008774
+  190 |     0.0002 |   1.005441
+  200 |     0.0001 |   1.003374
+  210 |     0.0000 |   1.002092
+  220 |     0.0000 |   1.001297
+  230 |     0.0000 |   1.000804
+  240 |     0.0000 |   1.000499
+  250 |     0.0000 |   1.000309
+  260 |     0.0000 |   1.000192
+  270 |     0.0000 |   1.000119
+  280 |     0.0000 |   1.000074
+  290 |     0.0000 |   1.000046
+  
+  
+ #처음의 cost는 큰 값을 가지고 있다가 점점 0에 수렴
+ #W값 역시 처음에 임의의 값이였다가 특정 값인 1로 수렴해가는 것을 확인할 
+ #W값이 무엇이던 상관없이 cost는 0으로 , W는 특정한 값으로 수렴해 감
