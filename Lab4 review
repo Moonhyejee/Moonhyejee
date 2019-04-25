@@ -1,212 +1,128 @@
-import tensorflow as tf
-import numpy as np
-
-tf.enable_eager_execution()
-tf.__version__
-
-tf.set_random_seed(0)  # for reproducibility
-
-x1_data = [1, 0, 3, 0, 5]
-x2_data = [0, 2, 0, 4, 0]
-y_data  = [1, 2, 3, 4, 5]
-
-W1 = tf.Variable(tf.random_uniform([1], -10.0, 10.0))
-W2 = tf.Variable(tf.random_uniform([1], -10.0, 10.0))
-b  = tf.Variable(tf.random_uniform([1], -10.0, 10.0))
-
-learning_rate = tf.Variable(0.001)
-
-for i in range(1000+1):
-    with tf.GradientTape() as tape:
-        hypothesis = W1 * x1_data + W2 * x2_data + b
-        cost = tf.reduce_mean(tf.square(hypothesis - y_data))
-    W1_grad, W2_grad, b_grad = tape.gradient(cost, [W1, W2, b])
-    W1.assign_sub(learning_rate * W1_grad)
-    W2.assign_sub(learning_rate * W2_grad)
-    b.assign_sub(learning_rate * b_grad)
-
-    if i % 50 == 0:
-        print("{:5} | {:10.6f} | {:10.4f} | {:10.4f} | {:10.6f}".format(
-          i, cost.numpy(), W1.numpy()[0], W2.numpy()[0], b.numpy()[0]))
-          
-x_data = [
-    [1., 0., 3., 0., 5.],
-    [0., 2., 0., 4., 0.]
-]
-y_data  = [1, 2, 3, 4, 5]
-
-W = tf.Variable(tf.random_uniform([1, 2], -1.0, 1.0))
-b = tf.Variable(tf.random_uniform([1], -1.0, 1.0))
-
-learning_rate = tf.Variable(0.001)
-
-for i in range(1000+1):
-    with tf.GradientTape() as tape:
-        hypothesis = tf.matmul(W, x_data) + b # (1, 2) * (2, 5) = (1, 5)
-        cost = tf.reduce_mean(tf.square(hypothesis - y_data))
-
-        W_grad, b_grad = tape.gradient(cost, [W, b])
-        W.assign_sub(learning_rate * W_grad)
-        b.assign_sub(learning_rate * b_grad)
-    
-    if i % 50 == 0:
-        print("{:5} | {:10.6f} | {:10.4f} | {:10.4f} | {:10.6f}".format(
-            i, cost.numpy(), W.numpy()[0][0], W.numpy()[0][1], b.numpy()[0]))
-            
-import tensorflow as tf
-
-# 앞의 코드에서 bias(b)를 행렬에 추가
-x_data = [
-    [1., 1., 1., 1., 1.], # bias(b)
-    [1., 0., 3., 0., 5.], 
-    [0., 2., 0., 4., 0.]
-]
-y_data  = [1, 2, 3, 4, 5]
-
-W = tf.Variable(tf.random_uniform([1, 3], -1.0, 1.0)) # [1, 3]으로 변경하고, b 삭제
-
-learning_rate = 0.001
-optimizer = tf.train.GradientDescentOptimizer(learning_rate)
-
-for i in range(1000+1):
-    with tf.GradientTape() as tape:
-        hypothesis = tf.matmul(W, x_data) # b가 없다
-        cost = tf.reduce_mean(tf.square(hypothesis - y_data))
-
-    grads = tape.gradient(cost, [W])
-    optimizer.apply_gradients(grads_and_vars=zip(grads,[W]))
-    if i % 50 == 0:
-        print("{:5} | {:10.6f} | {:10.4f} | {:10.4f} | {:10.4f}".format(
-            i, cost.numpy(), W.numpy()[0][0], W.numpy()[0][1], W.numpy()[0][2]))
-            
-# Multi-variable linear regression (1)
-
-X = tf.constant([[1., 2.], 
-                 [3., 4.]])
-y = tf.constant([[1.5], [3.5]])
-
-W = tf.Variable(tf.random_normal([2, 1]))
-b = tf.Variable(tf.random_normal([1]))
-
-# Create an optimizer
-optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.01)
-
-n_epoch = 1000+1
-print("epoch | cost")
-for i in range(n_epoch):
-    # Use tf.GradientTape() to record the gradient of the cost function
-    with tf.GradientTape() as tape:
-        y_pred = tf.matmul(X, W) + b
-        cost = tf.reduce_mean(tf.square(y_pred - y))
-
-    # calculates the gradients of the loss
-    grads = tape.gradient(cost, [W, b])
-    
-    # updates parameters (W and b)
-    optimizer.apply_gradients(grads_and_vars=zip(grads, [W, b]))
-    if i % 50 == 0:
-        print("{:5} | {:10.6f}".format(i, cost.numpy()))
-        
-tf.set_random_seed(0)  # for reproducibility
-
+#Multi-variable linear regression (1)
+#Hypothesis using matrix
 # data and label
-x1 = [ 73.,  93.,  89.,  96.,  73.]
-x2 = [ 80.,  88.,  91.,  98.,  66.]
-x3 = [ 75.,  93.,  90., 100.,  70.]
-Y  = [152., 185., 180., 196., 142.]
+x1 = [ 73.,  93.,  89.,  96.,  73.]     #변수 3개 만듦. X1_data 만들기
+x2 = [ 80.,  88.,  91.,  98.,  66.]     #X3_data 만들기
+x3 = [ 75.,  93.,  90., 100.,  70.]     #X3_data 만들기
+Y  = [152., 185., 180., 196., 142.]     # 3개의 데이터에 대한 정답 즉, 예측값. lable혹은 true_value라고 함
 
-# weights
-w1 = tf.Variable(10.)
-w2 = tf.Variable(10.)
-w3 = tf.Variable(10.)
-b  = tf.Variable(10.)
-
-learning_rate = 0.000001
-
-for i in range(1000+1):
-    # tf.GradientTape() to record the gradient of the cost function
-    with tf.GradientTape() as tape:
-        hypothesis = w1 * x1 +  w2 * x2 + w3 * x3 + b
-        cost = tf.reduce_mean(tf.square(hypothesis - Y))
-    # calculates the gradients of the cost
-    w1_grad, w2_grad, w3_grad, b_grad = tape.gradient(cost, [w1, w2, w3, b])
-    
-    # update w1,w2,w3 and b
-    w1.assign_sub(learning_rate * w1_grad)
-    w2.assign_sub(learning_rate * w2_grad)
-    w3.assign_sub(learning_rate * w3_grad)
-    b.assign_sub(learning_rate * b_grad)
-
-    if i % 50 == 0:
-      print("{:5} | {:12.4f}".format(i, cost.numpy()))
-      
-# data and label
-x1 = [ 73.,  93.,  89.,  96.,  73.]
-x2 = [ 80.,  88.,  91.,  98.,  66.]
-x3 = [ 75.,  93.,  90., 100.,  70.]
-Y  = [152., 185., 180., 196., 142.]
-
-# random weights
-w1 = tf.Variable(tf.random_normal([1]))
+# random weights     #변수가 3개이므로 W도 3개가 필요
+w1 = tf.Variable(tf.random_normal([1]))   #초기값 1로 줌. #초기값은 아무값을 줘도 됨. 일반적으로 랜덤값을 줌
 w2 = tf.Variable(tf.random_normal([1]))
 w3 = tf.Variable(tf.random_normal([1]))
 b  = tf.Variable(tf.random_normal([1]))
 
-learning_rate = 0.000001
+learning_rate = 0.000001     #아주 작은 값(0.000001)으로 정해줌(learning_rate가 작을수록 조금씩 변화가 일어남)
 
-for i in range(1000+1):
-    # tf.GradientTape() to record the gradient of the cost function
-    with tf.GradientTape() as tape:
-        hypothesis = w1 * x1 +  w2 * x2 + w3 * x3 + b
-        cost = tf.reduce_mean(tf.square(hypothesis - Y))
+for i in range(1000+1):    #1001번 반복
+    # tf.GradientTape() to record the gradient of the cost function   #gradient descent를 이용하여 학습. gradient table을 이용하여 구현
+    with tf.GradientTape() as tape:   #변수들에 대한 정보를 tape로 입력
+        hypothesis = w1 * x1 +  w2 * x2 + w3 * x3 + b    #가설함수 hyporthesis를 코드로 입력
+        cost = tf.reduce_mean(tf.square(hypothesis - Y))    #경사하강법(gradient descent)은 경사를 하강하면서 cost가 최소화되는 w,b를 찾는것
     # calculates the gradients of the cost
-    w1_grad, w2_grad, w3_grad, b_grad = tape.gradient(cost, [w1, w2, w3, b])
+    w1_grad, w2_grad, w3_grad, b_grad = tape.gradient(cost, [w1, w2, w3, b])   #변수([w1,w2,w3,b])들에 대한 gradient(기울기) 값을 구함 
+                                                                               #W1_grad는 W1의 기울기,W2_grad는 W2의 기울기,W3_grad는 W3의 기울기, b_grad는 b의 기울기
     
-    # update w1,w2,w3 and b
-    w1.assign_sub(learning_rate * w1_grad)
-    w2.assign_sub(learning_rate * w2_grad)
-    w3.assign_sub(learning_rate * w3_grad)
-    b.assign_sub(learning_rate * b_grad)
+    # update w1,w2,w3 and b    #W값을 지속적으로 업데이트. assign_sub함수 이용
+    w1.assign_sub(learning_rate * w1_grad)     #learning_rate에서 w1의 기울기 값을 빼서 할당
+    w2.assign_sub(learning_rate * w2_grad)     #learning_rate에서 w2의 기울기 값을 빼서 할당
+    w3.assign_sub(learning_rate * w3_grad)     #learning_rate에서 w3의 기울기 값을 빼서 할당
+    b.assign_sub(learning_rate * b_grad)       #learning_rate에서 b의 기울기 값을 빼서 할당
 
-    if i % 50 == 0:
-      print("{:5} | {:12.4f}".format(i, cost.numpy()))
-      
+    if i % 50 == 0:     #중간중간 확인하기 위해 사용
+      print("{:5} | {:12.4f}".format(i, cost.numpy()))   #i값이 50의 배수가 될때마다 cost값 출력
+ 
+ 
+ #결과
+    0 |   11325.9121
+   50 |     135.3618
+  100 |      11.1817
+  150 |       9.7940
+  200 |       9.7687
+  250 |       9.7587
+  300 |       9.7489
+  350 |       9.7389
+  400 |       9.7292
+  450 |       9.7194
+  500 |       9.7096
+  550 |       9.6999
+  600 |       9.6903
+  650 |       9.6806
+  700 |       9.6709
+  750 |       9.6612
+  800 |       9.6517
+  850 |       9.6421
+  900 |       9.6325
+  950 |       9.6229
+ 1000 |       9.6134
+ #처음에는 좀 큰 값, 일정정도 급속히 줄어들다가 그 이후로는 cost가 거의 줄어들지 않음
+     
+     
+#Multi-variable linear regression (2)
+#Matrix  #훨씬 더 간결하게 표현 가능
 data = np.array([
     # X1,   X2,    X3,   y
-    [ 73.,  80.,  75., 152. ],
+    [ 73.,  80.,  75., 152. ],    #데이터 한꺼번에 준비됨  column별로 x1,x2,x3,y데이터 준비.
     [ 93.,  88.,  93., 185. ],
     [ 89.,  91.,  90., 180. ],
     [ 96.,  98., 100., 196. ],
     [ 73.,  66.,  70., 142. ]
 ], dtype=np.float32)
 
-# slice data
-X = data[:, :-1]
-y = data[:, [-1]]
+# slice data   #numpy에 slice를 이용해서 데이터를 잘라냄
+X = data[:, :-1]   #5행 3열 매트릭스. #x데이터. :(처음부터 끝까지의 행)은 행, :-1(마지막열을 제외한 열)은 열을 나타냄
+y = data[:, [-1]]  #y데이터. :(처음부터 끝까지의 행)은 행, [-1](마지막열)은 열을 나타냄. 즉, ,앞뒤로 행과 열을 나타냄
 
-W = tf.Variable(tf.random_normal([3, 1]))
-b = tf.Variable(tf.random_normal([1]))
+W = tf.Variable(tf.random_normal([3, 1]))   #x데이터가 matrix로 표현되어있기 때문에 하나의 변수값으로 나옴 (row가 3개, col가 1개)
+b = tf.Variable(tf.random_normal([1]))      #출력값은 하나이므로 1
 
-learning_rate = 0.000001
+learning_rate = 0.000001    #아주 작은 값(0.000001)으로 정해줌(learning_rate가 작을수록 조금씩 변화가 일어남)
 
-# hypothesis, prediction function
-def predict(X):
-    return tf.matmul(X, W) + b
+# hypothesis, prediction function   
+def predict(X):    #가설함수(predict) 정의 
+    return tf.matmul(X, W) + b    X곱하기 W v 플러스 b  (나중에 b는 생략 가능)
 
-print("epoch | cost")
+print("epoch | cost")   #출력
 
-n_epochs = 2000
-for i in range(n_epochs+1):
-    # tf.GradientTape() to record the gradient of the cost function
-    with tf.GradientTape() as tape:
-        cost = tf.reduce_mean((tf.square(predict(X) - y)))
+n_epochs = 2000   #2000번의 순회. 지속적으로 업데이트
+for i in range(n_epochs+1):   #2001회 n_epochs가 수행하도록 함
+    # tf.GradientTape() to record the gradient of the cost function    #gradient descent를 이용하여 학습. gradient table을 이용하여 구현
+    with tf.GradientTape() as tape:    #변수들에 대한 정보를 tape로 입력
+        cost = tf.reduce_mean((tf.square(predict(X) - y)))     #cost함수 정의 #predict(예측값)에서 실제값을 뺀 뒤 제곱하고 평균을 냄 #tf.square이 제곱, tf.reduce_mean이 평균
+                                                             
+    # calculates the gradients of the loss   
+    W_grad, b_grad = tape.gradient(cost, [W, b])     #변수에 대한 gradient(기울기) 값을 구함 
+                                                     #W_grad는 W의 기울기, b_grad는 b의 기울기
 
-    # calculates the gradients of the loss
-    W_grad, b_grad = tape.gradient(cost, [W, b])
-
-    # updates parameters (W and b)
-    W.assign_sub(learning_rate * W_grad)
-    b.assign_sub(learning_rate * b_grad)
+    # updates parameters (W and b)          #W값을 지속적으로 업데이트. assign_sub함수 이용
+    W.assign_sub(learning_rate * W_grad)    #learning_rate에서 w의 기울기 값을 빼서 할당
+    b.assign_sub(learning_rate * b_grad)    #learning_rate에서 b의 기울기 값을 빼서 할당
     
-    if i % 100 == 0:
-        print("{:5} | {:10.4f}".format(i, cost.numpy()))
+    if i % 100 == 0:        #중간중간 확인하기 위해 사용
+        print("{:5} | {:10.4f}".format(i, cost.numpy()))    #i값이 100의 배수가 될때마다 cost값 출력
+    
+#결과   
+epoch | cost
+    0 |  5455.5903
+  100 |    31.7443
+  200 |    30.9326
+  300 |    30.7894
+  400 |    30.6468
+  500 |    30.5055
+  600 |    30.3644
+  700 |    30.2242
+  800 |    30.0849
+  900 |    29.9463
+ 1000 |    29.8081
+ 1100 |    29.6710
+ 1200 |    29.5348
+ 1300 |    29.3989
+ 1400 |    29.2641
+ 1500 |    29.1299
+ 1600 |    28.9961
+ 1700 |    28.8634
+ 1800 |    28.7313
+ 1900 |    28.5997
+ 2000 |    28.4689
+ #cost값은 처음에 컸다가 급속하게 줄어든 뒤 더이상 거의 줄어들지 않음. 즉 최적화가 굉장히 빠르게 이루어짐.
+ #matrix를 사용하지 않는다면 변수의 갯수만큼 w가 필요하여 각각 따로따로 기술을 해줘야하기 때문에 더 힘들다. matrix를 사용하면 간단하게 1줄로 표현됨. 간편하게 사용가능
